@@ -162,10 +162,14 @@ public final class Engine: ObservableObject {
         let chunker = UniversalChunker()
 
         self.docsDirectory = docsDir
-        self.folio = try! FolioEngine(databaseURL: dbURL,
-                                      loaders: [pdfLoader, textLoader],
-                                      chunker: chunker,
-                                      embedder: nil)
+        do {
+            self.folio = try FolioEngine(databaseURL: dbURL,
+                                         loaders: [pdfLoader, textLoader],
+                                         chunker: chunker,
+                                         embedder: nil)
+        } catch {
+            fatalError("Failed to initialize FolioEngine: \(error)")
+        }
 
         var config = FolioConfig()
         config.chunking.maxTokensPerChunk = 1000
@@ -325,9 +329,14 @@ public final class Engine: ObservableObject {
                 let result: (pages: Int, chunks: Int)
                 switch kind {
                 case .pdf:
-                    result = try self.folio.ingest(.pdf(fileURL), sourceId: sourceId, config: self.ingestConfig)
+                    result = try self.folio.ingest(.pdf(fileURL),
+                                                    sourceId: sourceId,
+                                                    config: self.ingestConfig)
                 case .text:
-                    result = try self.folio.ingest(.text(fileURL), sourceId: sourceId, config: self.ingestConfig)
+                    let text = try self.loadTextContents(from: fileURL)
+                    result = try self.folio.ingest(.text(text, name: fileURL.lastPathComponent),
+                                                    sourceId: sourceId,
+                                                    config: self.ingestConfig)
                 }
 
                 self.emitProgress(.chunking, message: "Chunked \(result.chunks) segments", for: sourceId)
@@ -341,6 +350,18 @@ public final class Engine: ObservableObject {
             } catch {
                 self.handleIngestFailure(sourceId: sourceId, error: error)
             }
+        }
+    }
+
+    private func loadTextContents(from fileURL: URL) throws -> String {
+        do {
+            return try String(contentsOf: fileURL, encoding: .utf8)
+        } catch {
+            let data = try Data(contentsOf: fileURL)
+            if let string = String(data: data, encoding: .utf8) {
+                return string
+            }
+            return String(decoding: data, as: UTF8.self)
         }
     }
 
@@ -558,6 +579,7 @@ public final class Engine: ObservableObject {
         fileURL(for: id, kind: kind).appendingPathExtension("pending")
     }
 
+ 
     private func writePendingMarker(for id: String, kind: SourceKind) {
         let marker = pendingMarkerURL(for: id, kind: kind)
         try? "pending".data(using: .utf8)?.write(to: marker, options: .atomic)
@@ -625,7 +647,7 @@ public final class Engine: ObservableObject {
         }
 
         let initial = progress[id] ?? IngestProgress.idle()
-        let subject = CurrentValueSubject(initial)
+        let subject = CurrentValueSubject<IngestProgress, Never>(initial)
         progressSubjects[id] = subject
         return subject
     }
