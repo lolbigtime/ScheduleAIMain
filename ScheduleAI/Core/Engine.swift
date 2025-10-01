@@ -13,6 +13,26 @@ import OSLog
 
 public final class Engine: ObservableObject {
 
+    public enum DocumentKind: String, CaseIterable, Equatable {
+        case pdf
+        case text
+
+        var fileExtension: String {
+            switch self {
+            case .pdf: return "pdf"
+            case .text: return "txt"
+            }
+        }
+
+        init?(fileExtension: String) {
+            switch fileExtension.lowercased() {
+            case "pdf": self = .pdf
+            case "txt", "text": self = .text
+            default: return nil
+            }
+        }
+    }
+
     public struct DocumentSummary: Identifiable, Equatable {
         public let id: String
         public var title: String
@@ -22,6 +42,7 @@ public final class Engine: ObservableObject {
         public var status: DocumentStatus
         public var updatedAt: Date
         public var fileURL: URL
+        public var kind: DocumentKind
 
         public init(id: String,
                     title: String,
@@ -30,7 +51,8 @@ public final class Engine: ObservableObject {
                     fileSize: Int64,
                     status: DocumentStatus,
                     updatedAt: Date,
-                    fileURL: URL) {
+                    fileURL: URL,
+                    kind: DocumentKind) {
             self.id = id
             self.title = title
             self.pageCount = pageCount
@@ -39,6 +61,7 @@ public final class Engine: ObservableObject {
             self.status = status
             self.updatedAt = updatedAt
             self.fileURL = fileURL
+            self.kind = kind
         }
     }
 
@@ -90,6 +113,34 @@ public final class Engine: ObservableObject {
     public let folio: FolioEngine
 
     private let docsDirectory: URL
+    private enum SourceKind: String, CaseIterable {
+        case pdf
+        case text
+
+        init(documentKind: DocumentKind) {
+            switch documentKind {
+            case .pdf: self = .pdf
+            case .text: self = .text
+            }
+        }
+
+        var documentKind: DocumentKind {
+            switch self {
+            case .pdf: return .pdf
+            case .text: return .text
+            }
+        }
+
+        var fileExtension: String { documentKind.fileExtension }
+
+        init?(fileExtension: String) {
+            switch fileExtension.lowercased() {
+            case "pdf": self = .pdf
+            case "txt", "text": self = .text
+            default: return nil
+            }
+        }
+    }
     private let ingestQueue = DispatchQueue(label: "com.scheduleai.engine.ingest", qos: .userInitiated)
     private let logger = Logger(subsystem: "com.scheduleai.engine", category: "Engine")
     private var progressSubjects: [String: CurrentValueSubject<IngestProgress, Never>] = [:]
@@ -111,10 +162,14 @@ public final class Engine: ObservableObject {
         let chunker = UniversalChunker()
 
         self.docsDirectory = docsDir
-        self.folio = try! FolioEngine(databaseURL: dbURL,
-                                      loaders: [pdfLoader, textLoader],
-                                      chunker: chunker,
-                                      embedder: nil)
+        do {
+            self.folio = try FolioEngine(databaseURL: dbURL,
+                                         loaders: [pdfLoader, textLoader],
+                                         chunker: chunker,
+                                         embedder: nil)
+        } catch {
+            fatalError("Failed to initialize FolioEngine: \(error)")
+        }
 
         var config = FolioConfig()
         config.chunking.maxTokensPerChunk = 1000
@@ -131,44 +186,25 @@ public final class Engine: ObservableObject {
 
     @discardableResult
     public func importPDF(at sourceURL: URL) async throws -> String {
-        try await withCheckedThrowingContinuation { continuation in
-            ingestQueue.async { [weak self] in
-                guard let self else {
-                    continuation.resume(throwing: EngineError.engineReleased)
-                    return
-                }
+        try await importDocument(from: sourceURL, kind: .pdf, preferredTitle: sourceURL.deletingPathExtension().lastPathComponent)
+    }
 
-                do {
-                    let preparation = try self.prepareDocument(at: sourceURL)
+    @discardableResult
+    public func importDocument(at sourceURL: URL) async throws -> String {
+        let ext = sourceURL.pathExtension.lowercased()
+        let kind: SourceKind = SourceKind(fileExtension: ext) ?? .pdf
+        return try await importDocument(from: sourceURL, kind: kind, preferredTitle: sourceURL.deletingPathExtension().lastPathComponent)
+    }
 
-                    if preparation.isDuplicate {
-                        self.logger.debug("Duplicate import detected for \(preparation.id, privacy: .public). Skipping ingest.")
-                        self.emitProgress(.completed, message: "Duplicate import skipped.", for: preparation.id)
-                        self.refreshDocuments()
-                        continuation.resume(returning: preparation.id)
-                        return
-                    }
-
-                    self.publishOnMain {
-                        let placeholder = self.makePlaceholderSummary(id: preparation.id,
-                                                                       fileURL: preparation.destination,
-                                                                       size: preparation.size)
-                        self.upsertDocument(placeholder)
-                    }
-
-                    self.writePendingMarker(for: preparation.id)
-
-                    self.enqueueIngest(sourceId: preparation.id,
-                                       fileURL: preparation.destination,
-                                       isResuming: false)
-
-                    continuation.resume(returning: preparation.id)
-                } catch {
-                    self.publishError(error)
-                    continuation.resume(throwing: error)
-                }
-            }
-        }
+    @discardableResult
+    public func importText(title: String, content: String) async throws -> String {
+        let data = Data(content.utf8)
+        let tempURL = FileManager.default.temporaryDirectory
+            .appendingPathComponent(UUID().uuidString)
+            .appendingPathExtension(SourceKind.text.fileExtension)
+        try data.write(to: tempURL, options: .atomic)
+        defer { try? FileManager.default.removeItem(at: tempURL) }
+        return try await importDocument(from: tempURL, kind: .text, preferredTitle: title)
     }
 
     public func observeProgress(for documentId: String) -> AnyPublisher<IngestProgress, Never> {
@@ -212,10 +248,13 @@ public final class Engine: ObservableObject {
 
                 do {
                     try self.folio.deleteSource(id)
-                    let pdfURL = self.fileURL(for: id)
-                    let markerURL = self.pendingMarkerURL(for: id)
-                    try? FileManager.default.removeItem(at: pdfURL)
-                    try? FileManager.default.removeItem(at: markerURL)
+                    let fm = FileManager.default
+                    for kind in SourceKind.allCases {
+                        let fileURL = self.fileURL(for: id, kind: kind)
+                        let markerURL = self.pendingMarkerURL(for: id, kind: kind)
+                        try? fm.removeItem(at: fileURL)
+                        try? fm.removeItem(at: markerURL)
+                    }
 
                     self.publishOnMain {
                         self.progress.removeValue(forKey: id)
@@ -233,7 +272,51 @@ public final class Engine: ObservableObject {
         }
     }
 
-    private func enqueueIngest(sourceId: String, fileURL: URL, isResuming: Bool) {
+    private func importDocument(from sourceURL: URL, kind: SourceKind, preferredTitle: String?) async throws -> String {
+        try await withCheckedThrowingContinuation { continuation in
+            ingestQueue.async { [weak self] in
+                guard let self else {
+                    continuation.resume(throwing: EngineError.engineReleased)
+                    return
+                }
+
+                do {
+                    let preparation = try self.prepareDocument(at: sourceURL, kind: kind)
+
+                    if preparation.isDuplicate {
+                        self.logger.debug("Duplicate import detected for \(preparation.id, privacy: .public). Skipping ingest.")
+                        self.emitProgress(.completed, message: "Duplicate import skipped.", for: preparation.id)
+                        self.refreshDocuments()
+                        continuation.resume(returning: preparation.id)
+                        return
+                    }
+
+                    self.publishOnMain {
+                        let placeholder = self.makePlaceholderSummary(id: preparation.id,
+                                                                       fileURL: preparation.destination,
+                                                                       size: preparation.size,
+                                                                       kind: kind.documentKind,
+                                                                       preferredTitle: preferredTitle)
+                        self.upsertDocument(placeholder)
+                    }
+
+                    self.writePendingMarker(for: preparation.id, kind: kind)
+
+                    self.enqueueIngest(sourceId: preparation.id,
+                                       fileURL: preparation.destination,
+                                       kind: kind,
+                                       isResuming: false)
+
+                    continuation.resume(returning: preparation.id)
+                } catch {
+                    self.publishError(error)
+                    continuation.resume(throwing: error)
+                }
+            }
+        }
+    }
+
+    private func enqueueIngest(sourceId: String, fileURL: URL, kind: SourceKind, isResuming: Bool) {
         emitProgress(.queued, message: isResuming ? "Resuming pending import…" : "Queued for ingest", for: sourceId)
 
         ingestQueue.async { [weak self] in
@@ -243,13 +326,25 @@ public final class Engine: ObservableObject {
             self.emitProgress(.extracting, message: "Extracting text…", for: sourceId)
 
             do {
-                let result = try self.folio.ingest(.pdf(fileURL), sourceId: sourceId, config: self.ingestConfig)
+                let result: (pages: Int, chunks: Int)
+                switch kind {
+                case .pdf:
+                    result = try self.folio.ingest(.pdf(fileURL),
+                                                    sourceId: sourceId,
+                                                    config: self.ingestConfig)
+                case .text:
+                    let text = try self.loadTextContents(from: fileURL)
+                    result = try self.folio.ingest(.text(text, name: fileURL.lastPathComponent),
+                                                    sourceId: sourceId,
+                                                    config: self.ingestConfig)
+                }
 
                 self.emitProgress(.chunking, message: "Chunked \(result.chunks) segments", for: sourceId)
                 self.emitProgress(.writing, message: "Persisting index…", for: sourceId)
 
                 self.handleIngestSuccess(sourceId: sourceId,
                                          fileURL: fileURL,
+                                         kind: kind.documentKind,
                                          pages: result.pages,
                                          chunks: result.chunks)
             } catch {
@@ -258,12 +353,33 @@ public final class Engine: ObservableObject {
         }
     }
 
-    private func handleIngestSuccess(sourceId: String, fileURL: URL, pages: Int, chunks: Int) {
+    private func loadTextContents(from fileURL: URL) throws -> String {
+        do {
+            return try String(contentsOf: fileURL, encoding: .utf8)
+        } catch {
+            let data = try Data(contentsOf: fileURL)
+            if let string = String(data: data, encoding: .utf8) {
+                return string
+            }
+            return String(decoding: data, as: UTF8.self)
+        }
+    }
+
+    private func handleIngestSuccess(sourceId: String, fileURL: URL, kind: DocumentKind, pages: Int, chunks: Int) {
         removePendingMarker(for: sourceId)
 
         emitProgress(.completed,
                      message: "Indexed \(chunks) chunks across \(pages) pages",
                      for: sourceId)
+
+        publishOnMain {
+            if let index = self.documents.firstIndex(where: { $0.id == sourceId }) {
+                self.documents[index].fileURL = fileURL
+                self.documents[index].kind = kind
+                self.documents[index].pageCount = pages
+                self.documents[index].chunkCount = chunks
+            }
+        }
 
         logger.info("Completed ingest for \(sourceId, privacy: .public) — pages: \(pages), chunks: \(chunks)")
         refreshDocuments()
@@ -292,11 +408,12 @@ public final class Engine: ObservableObject {
                 }
 
                 let summaries: [DocumentSummary] = sources.map { source in
-                    let fileURL = self.fileURL(for: source.id)
+                    let fileURL = self.resolveFileURL(for: source.id, fileNameHint: source.filePath)
                     let attributes = (try? fileManager.attributesOfItem(atPath: fileURL.path)) ?? [:]
                     let size = (attributes[.size] as? NSNumber)?.int64Value ?? 0
                     let updated = self.isoFormatter.date(from: source.importedAt) ?? Date()
                     let currentStatus = progressSnapshot[source.id]?.phase ?? .completed
+                    let kind = DocumentKind(fileExtension: fileURL.pathExtension) ?? .pdf
 
                     return DocumentSummary(id: source.id,
                                             title: source.displayName,
@@ -305,7 +422,8 @@ public final class Engine: ObservableObject {
                                             fileSize: size,
                                             status: currentStatus,
                                             updatedAt: updated,
-                                            fileURL: fileURL)
+                                            fileURL: fileURL,
+                                            kind: kind)
                 }
 
                 self.publishOnMain {
@@ -339,37 +457,50 @@ public final class Engine: ObservableObject {
             }
 
             for marker in pendingMarkers {
-                let id = marker.deletingPathExtension().lastPathComponent
-                let pdfURL = self.fileURL(for: id)
+                let withoutPending = marker.deletingPathExtension()
+                let id = withoutPending.deletingPathExtension().lastPathComponent
+                let ext = withoutPending.pathExtension
 
-                guard fileManager.fileExists(atPath: pdfURL.path) else {
+                guard let kind = SourceKind(fileExtension: ext) else {
                     try? fileManager.removeItem(at: marker)
                     continue
                 }
 
-                let attributes = (try? fileManager.attributesOfItem(atPath: pdfURL.path)) ?? [:]
+                let docURL = self.fileURL(for: id, kind: kind)
+
+                guard fileManager.fileExists(atPath: docURL.path) else {
+                    try? fileManager.removeItem(at: marker)
+                    continue
+                }
+
+                let attributes = (try? fileManager.attributesOfItem(atPath: docURL.path)) ?? [:]
                 let size = (attributes[.size] as? NSNumber)?.int64Value ?? 0
 
                 self.publishOnMain {
-                    let placeholder = self.makePlaceholderSummary(id: id, fileURL: pdfURL, size: size)
+                    let placeholder = self.makePlaceholderSummary(id: id,
+                                                                   fileURL: docURL,
+                                                                   size: size,
+                                                                   kind: kind.documentKind,
+                                                                   preferredTitle: nil)
                     self.upsertDocument(placeholder)
                 }
 
-                self.enqueueIngest(sourceId: id, fileURL: pdfURL, isResuming: true)
+                self.enqueueIngest(sourceId: id, fileURL: docURL, kind: kind, isResuming: true)
             }
         }
     }
 
-    private func prepareDocument(at url: URL) throws -> (id: String, destination: URL, size: Int64, isDuplicate: Bool) {
+    private func prepareDocument(at url: URL, kind: SourceKind) throws -> (id: String, destination: URL, size: Int64, isDuplicate: Bool) {
         let fileManager = FileManager.default
         let fingerprint = try fingerprint(forFileAt: url)
-        let destination = fileURL(for: fingerprint)
         let attributes = try fileManager.attributesOfItem(atPath: url.path)
         let size = (attributes[.size] as? NSNumber)?.int64Value ?? 0
 
-        if fileManager.fileExists(atPath: destination.path) {
-            return (fingerprint, destination, size, true)
+        if let existing = existingFileURLIfExists(for: fingerprint) {
+            return (fingerprint, existing, size, true)
         }
+
+        let destination = fileURL(for: fingerprint, kind: kind)
 
         do {
             if fileManager.fileExists(atPath: destination.path) {
@@ -407,33 +538,69 @@ public final class Engine: ObservableObject {
         return digest.map { String(format: "%02x", $0) }.joined()
     }
 
-    private func fileURL(for id: String) -> URL {
-        docsDirectory.appendingPathComponent("\(id).pdf")
+    private func fileURL(for id: String, kind: SourceKind) -> URL {
+        docsDirectory.appendingPathComponent("\(id).\(kind.fileExtension)")
     }
 
-    private func pendingMarkerURL(for id: String) -> URL {
-        fileURL(for: id).appendingPathExtension("pending")
+    private func resolveFileURL(for id: String, fileNameHint: String?) -> URL {
+        let fm = FileManager.default
+
+        if let hint = fileNameHint,
+           let ext = hint.split(separator: ".").last.map(String.init),
+           let kind = SourceKind(fileExtension: ext) {
+            let candidate = fileURL(for: id, kind: kind)
+            if fm.fileExists(atPath: candidate.path) {
+                return candidate
+            }
+        }
+
+        for kind in SourceKind.allCases {
+            let candidate = fileURL(for: id, kind: kind)
+            if fm.fileExists(atPath: candidate.path) {
+                return candidate
+            }
+        }
+
+        return fileURL(for: id, kind: .pdf)
     }
 
-    private func writePendingMarker(for id: String) {
-        let marker = pendingMarkerURL(for: id)
+    private func existingFileURLIfExists(for id: String) -> URL? {
+        let fm = FileManager.default
+        for kind in SourceKind.allCases {
+            let candidate = fileURL(for: id, kind: kind)
+            if fm.fileExists(atPath: candidate.path) {
+                return candidate
+            }
+        }
+        return nil
+    }
+
+    private func pendingMarkerURL(for id: String, kind: SourceKind) -> URL {
+        fileURL(for: id, kind: kind).appendingPathExtension("pending")
+    }
+
+    private func writePendingMarker(for id: String, kind: SourceKind) {
+        let marker = pendingMarkerURL(for: id, kind: kind)
         try? "pending".data(using: .utf8)?.write(to: marker, options: .atomic)
     }
 
     private func removePendingMarker(for id: String) {
-        let marker = pendingMarkerURL(for: id)
-        try? FileManager.default.removeItem(at: marker)
+        for kind in SourceKind.allCases {
+            let marker = pendingMarkerURL(for: id, kind: kind)
+            try? FileManager.default.removeItem(at: marker)
+        }
     }
 
-    private func makePlaceholderSummary(id: String, fileURL: URL, size: Int64) -> DocumentSummary {
+    private func makePlaceholderSummary(id: String, fileURL: URL, size: Int64, kind: DocumentKind, preferredTitle: String?) -> DocumentSummary {
         DocumentSummary(id: id,
-                        title: fileURL.deletingPathExtension().lastPathComponent,
+                        title: preferredTitle ?? fileURL.deletingPathExtension().lastPathComponent,
                         pageCount: nil,
                         chunkCount: 0,
                         fileSize: size,
                         status: .queued,
                         updatedAt: Date(),
-                        fileURL: fileURL)
+                        fileURL: fileURL,
+                        kind: kind)
     }
 
     private func upsertDocument(_ summary: DocumentSummary) {
@@ -479,7 +646,7 @@ public final class Engine: ObservableObject {
         }
 
         let initial = progress[id] ?? IngestProgress.idle()
-        let subject = CurrentValueSubject(initial)
+        let subject = CurrentValueSubject<IngestProgress, Never>(initial)
         progressSubjects[id] = subject
         return subject
     }
