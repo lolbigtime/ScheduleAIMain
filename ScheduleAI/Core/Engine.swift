@@ -239,7 +239,7 @@ public final class Engine: ObservableObject {
     }
 
     public func deleteDocument(id: String) async throws {
-        try await withCheckedThrowingContinuation { continuation in
+        try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<Void, Error>) in
             ingestQueue.async { [weak self] in
                 guard let self else {
                     continuation.resume(throwing: EngineError.engineReleased)
@@ -639,6 +639,7 @@ public final class Engine: ObservableObject {
             self.updateDocument(id, with: update)
         }
     }
+    
 
     private func subject(for id: String) -> CurrentValueSubject<IngestProgress, Never> {
         assert(Thread.isMainThread, "Progress subjects must be accessed on the main thread")
