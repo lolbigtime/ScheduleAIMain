@@ -9,9 +9,12 @@ import SwiftUI
 
 @main
 struct ScheduleAIApp: App {
+    @StateObject private var engine = Engine()
+
     var body: some Scene {
         WindowGroup {
             ContentView()
+                .environmentObject(engine)
         }
     }
 }
