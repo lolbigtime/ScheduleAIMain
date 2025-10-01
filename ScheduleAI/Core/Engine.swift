@@ -579,6 +579,7 @@ public final class Engine: ObservableObject {
         fileURL(for: id, kind: kind).appendingPathExtension("pending")
     }
 
+ 
     private func writePendingMarker(for id: String, kind: SourceKind) {
         let marker = pendingMarkerURL(for: id, kind: kind)
         try? "pending".data(using: .utf8)?.write(to: marker, options: .atomic)
