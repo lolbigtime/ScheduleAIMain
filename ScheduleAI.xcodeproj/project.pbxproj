@@ -6,6 +6,10 @@
 	objectVersion = 77;
 	objects = {
 
+/* Begin PBXBuildFile section */
+		437773502E8CF2290026431B /* Folio in Frameworks */ = {isa = PBXBuildFile; productRef = 4377734F2E8CF2290026431B /* Folio */; };
+/* End PBXBuildFile section */
+
 /* Begin PBXFileReference section */
 		437773402E8CF1DE0026431B /* ScheduleAI.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = ScheduleAI.app; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
@@ -23,6 +27,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				437773502E8CF2290026431B /* Folio in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -65,6 +70,7 @@
 			);
 			name = ScheduleAI;
 			packageProductDependencies = (
+				4377734F2E8CF2290026431B /* Folio */,
 			);
 			productName = ScheduleAI;
 			productReference = 437773402E8CF1DE0026431B /* ScheduleAI.app */;
@@ -94,6 +100,9 @@
 			);
 			mainGroup = 437773372E8CF1DE0026431B;
 			minimizedProjectReferenceProxies = 1;
+			packageReferences = (
+				4377734E2E8CF2290026431B /* XCRemoteSwiftPackageReference "Folio" */,
+			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = 437773412E8CF1DE0026431B /* Products */;
 			projectDirPath = "";
@@ -328,6 +337,25 @@
 			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
+
+/* Begin XCRemoteSwiftPackageReference section */
+		4377734E2E8CF2290026431B /* XCRemoteSwiftPackageReference "Folio" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/lolbigtime/Folio";
+			requirement = {
+				branch = main;
+				kind = branch;
+			};
+		};
+/* End XCRemoteSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		4377734F2E8CF2290026431B /* Folio */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 4377734E2E8CF2290026431B /* XCRemoteSwiftPackageReference "Folio" */;
+			productName = Folio;
+		};
+/* End XCSwiftPackageProductDependency section */
 	};
 	rootObject = 437773382E8CF1DE0026431B /* Project object */;
 }
