@@ -7,57 +7,74 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		437773502E8CF2290026431B /* Folio in Frameworks */ = {isa = PBXBuildFile; productRef = 4377734F2E8CF2290026431B /* Folio */; };
+                437773502E8CF2290026431B /* Folio in Frameworks */ = {isa = PBXBuildFile; productRef = 4377734F2E8CF2290026431B /* Folio */; };
+                437773A82E8D1ABC0026431B /* ScheduleAI.app in Frameworks */ = {isa = PBXBuildFile; fileRef = 437773402E8CF1DE0026431B /* ScheduleAI.app */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
-		437773402E8CF1DE0026431B /* ScheduleAI.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = ScheduleAI.app; sourceTree = BUILT_PRODUCTS_DIR; };
+                437773402E8CF1DE0026431B /* ScheduleAI.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = ScheduleAI.app; sourceTree = BUILT_PRODUCTS_DIR; };
+                437773A12E8D1ABC0026431B /* ScheduleAITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = ScheduleAITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
-		437773422E8CF1DE0026431B /* ScheduleAI */ = {
-			isa = PBXFileSystemSynchronizedRootGroup;
-			path = ScheduleAI;
-			sourceTree = "<group>";
-		};
+                437773422E8CF1DE0026431B /* ScheduleAI */ = {
+                        isa = PBXFileSystemSynchronizedRootGroup;
+                        path = ScheduleAI;
+                        sourceTree = "<group>";
+                };
+                437773A92E8D1ABC0026431B /* ScheduleAITests */ = {
+                        isa = PBXFileSystemSynchronizedRootGroup;
+                        path = ScheduleAITests;
+                        sourceTree = "<group>";
+                };
 /* End PBXFileSystemSynchronizedRootGroup section */
 
 /* Begin PBXFrameworksBuildPhase section */
-		4377733D2E8CF1DE0026431B /* Frameworks */ = {
-			isa = PBXFrameworksBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-				437773502E8CF2290026431B /* Folio in Frameworks */,
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-		};
+                4377733D2E8CF1DE0026431B /* Frameworks */ = {
+                        isa = PBXFrameworksBuildPhase;
+                        buildActionMask = 2147483647;
+                        files = (
+                                437773502E8CF2290026431B /* Folio in Frameworks */,
+                        );
+                        runOnlyForDeploymentPostprocessing = 0;
+                };
+                437773A32E8D1ABC0026431B /* Frameworks */ = {
+                        isa = PBXFrameworksBuildPhase;
+                        buildActionMask = 2147483647;
+                        files = (
+                                437773A82E8D1ABC0026431B /* ScheduleAI.app in Frameworks */,
+                        );
+                        runOnlyForDeploymentPostprocessing = 0;
+                };
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
-		437773372E8CF1DE0026431B = {
-			isa = PBXGroup;
-			children = (
-				437773422E8CF1DE0026431B /* ScheduleAI */,
-				437773412E8CF1DE0026431B /* Products */,
-			);
-			sourceTree = "<group>";
-		};
+                437773372E8CF1DE0026431B = {
+                        isa = PBXGroup;
+                        children = (
+                                437773422E8CF1DE0026431B /* ScheduleAI */,
+                                437773A92E8D1ABC0026431B /* ScheduleAITests */,
+                                437773412E8CF1DE0026431B /* Products */,
+                        );
+                        sourceTree = "<group>";
+                };
 		437773412E8CF1DE0026431B /* Products */ = {
 			isa = PBXGroup;
-			children = (
-				437773402E8CF1DE0026431B /* ScheduleAI.app */,
-			);
+                        children = (
+                                437773402E8CF1DE0026431B /* ScheduleAI.app */,
+                                437773A12E8D1ABC0026431B /* ScheduleAITests.xctest */,
+                        );
 			name = Products;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
-		4377733F2E8CF1DE0026431B /* ScheduleAI */ = {
-			isa = PBXNativeTarget;
-			buildConfigurationList = 4377734B2E8CF1DF0026431B /* Build configuration list for PBXNativeTarget "ScheduleAI" */;
-			buildPhases = (
-				4377733C2E8CF1DE0026431B /* Sources */,
+                4377733F2E8CF1DE0026431B /* ScheduleAI */ = {
+                        isa = PBXNativeTarget;
+                        buildConfigurationList = 4377734B2E8CF1DF0026431B /* Build configuration list for PBXNativeTarget "ScheduleAI" */;
+                        buildPhases = (
+                                4377733C2E8CF1DE0026431B /* Sources */,
 				4377733D2E8CF1DE0026431B /* Frameworks */,
 				4377733E2E8CF1DE0026431B /* Resources */,
 			);
@@ -72,10 +89,33 @@
 			packageProductDependencies = (
 				4377734F2E8CF2290026431B /* Folio */,
 			);
-			productName = ScheduleAI;
-			productReference = 437773402E8CF1DE0026431B /* ScheduleAI.app */;
-			productType = "com.apple.product-type.application";
-		};
+                        productName = ScheduleAI;
+                        productReference = 437773402E8CF1DE0026431B /* ScheduleAI.app */;
+                        productType = "com.apple.product-type.application";
+                };
+                437773A02E8D1ABC0026431B /* ScheduleAITests */ = {
+                        isa = PBXNativeTarget;
+                        buildConfigurationList = 437773A52E8D1ABC0026431B /* Build configuration list for PBXNativeTarget "ScheduleAITests" */;
+                        buildPhases = (
+                                437773A22E8D1ABC0026431B /* Sources */,
+                                437773A32E8D1ABC0026431B /* Frameworks */,
+                                437773A42E8D1ABC0026431B /* Resources */,
+                        );
+                        buildRules = (
+                        );
+                        dependencies = (
+                                437773AB2E8D1ABC0026431B /* PBXTargetDependency */,
+                        );
+                        fileSystemSynchronizedGroups = (
+                                437773A92E8D1ABC0026431B /* ScheduleAITests */,
+                        );
+                        name = ScheduleAITests;
+                        packageProductDependencies = (
+                        );
+                        productName = ScheduleAITests;
+                        productReference = 437773A12E8D1ABC0026431B /* ScheduleAITests.xctest */;
+                        productType = "com.apple.product-type.bundle.unit-test";
+                };
 /* End PBXNativeTarget section */
 
 /* Begin PBXProject section */
@@ -85,11 +125,15 @@
 				BuildIndependentTargetsInParallel = 1;
 				LastSwiftUpdateCheck = 2600;
 				LastUpgradeCheck = 2600;
-				TargetAttributes = {
-					4377733F2E8CF1DE0026431B = {
-						CreatedOnToolsVersion = 26.0;
-					};
-				};
+                                TargetAttributes = {
+                                        4377733F2E8CF1DE0026431B = {
+                                                CreatedOnToolsVersion = 26.0;
+                                        };
+                                        437773A02E8D1ABC0026431B = {
+                                                CreatedOnToolsVersion = 26.0;
+                                                TestTargetID = 4377733F2E8CF1DE0026431B;
+                                        };
+                                };
 			};
 			buildConfigurationList = 4377733B2E8CF1DE0026431B /* Build configuration list for PBXProject "ScheduleAI" */;
 			developmentRegion = en;
@@ -107,37 +151,60 @@
 			productRefGroup = 437773412E8CF1DE0026431B /* Products */;
 			projectDirPath = "";
 			projectRoot = "";
-			targets = (
-				4377733F2E8CF1DE0026431B /* ScheduleAI */,
-			);
+                        targets = (
+                                4377733F2E8CF1DE0026431B /* ScheduleAI */,
+                                437773A02E8D1ABC0026431B /* ScheduleAITests */,
+                        );
 		};
 /* End PBXProject section */
 
 /* Begin PBXResourcesBuildPhase section */
-		4377733E2E8CF1DE0026431B /* Resources */ = {
-			isa = PBXResourcesBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-		};
+                4377733E2E8CF1DE0026431B /* Resources */ = {
+                        isa = PBXResourcesBuildPhase;
+                        buildActionMask = 2147483647;
+                        files = (
+                        );
+                        runOnlyForDeploymentPostprocessing = 0;
+                };
+                437773A42E8D1ABC0026431B /* Resources */ = {
+                        isa = PBXResourcesBuildPhase;
+                        buildActionMask = 2147483647;
+                        files = (
+                        );
+                        runOnlyForDeploymentPostprocessing = 0;
+                };
 /* End PBXResourcesBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
-		4377733C2E8CF1DE0026431B /* Sources */ = {
-			isa = PBXSourcesBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-		};
+                4377733C2E8CF1DE0026431B /* Sources */ = {
+                        isa = PBXSourcesBuildPhase;
+                        buildActionMask = 2147483647;
+                        files = (
+                        );
+                        runOnlyForDeploymentPostprocessing = 0;
+                };
+                437773A22E8D1ABC0026431B /* Sources */ = {
+                        isa = PBXSourcesBuildPhase;
+                        buildActionMask = 2147483647;
+                        files = (
+                        );
+                        runOnlyForDeploymentPostprocessing = 0;
+                };
 /* End PBXSourcesBuildPhase section */
 
+/* Begin PBXTargetDependency section */
+                437773AB2E8D1ABC0026431B /* PBXTargetDependency */ = {isa = PBXTargetDependency; target = 4377733F2E8CF1DE0026431B /* ScheduleAI */; targetProxy = 437773AA2E8D1ABC0026431B /* PBXContainerItemProxy */; };
+/* End PBXTargetDependency section */
+
+/* Begin PBXContainerItemProxy section */
+                437773AA2E8D1ABC0026431B /* PBXContainerItemProxy */ = {isa = PBXContainerItemProxy; containerPortal = 437773382E8CF1DE0026431B /* Project object */; proxyType = 1; remoteGlobalIDString = 4377733F2E8CF1DE0026431B; remoteInfo = ScheduleAI; };
+/* End PBXContainerItemProxy section */
+
 /* Begin XCBuildConfiguration section */
-		437773492E8CF1DF0026431B /* Debug */ = {
-			isa = XCBuildConfiguration;
-			buildSettings = {
-				ALWAYS_SEARCH_USER_PATHS = NO;
+                437773492E8CF1DF0026431B /* Debug */ = {
+                        isa = XCBuildConfiguration;
+                        buildSettings = {
+                                ALWAYS_SEARCH_USER_PATHS = NO;
 				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
 				CLANG_ANALYZER_NONNULL = YES;
 				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
@@ -250,9 +317,55 @@
 				SDKROOT = iphoneos;
 				SWIFT_COMPILATION_MODE = wholemodule;
 				VALIDATE_PRODUCT = YES;
-			};
-			name = Release;
-		};
+                        };
+                        name = Release;
+                };
+                437773A62E8D1ABC0026431B /* Debug */ = {
+                        isa = XCBuildConfiguration;
+                        buildSettings = {
+                                ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = YES;
+                                BUNDLE_LOADER = "$(TEST_HOST)";
+                                CLANG_ENABLE_MODULES = YES;
+                                CODE_SIGN_STYLE = Automatic;
+                                GENERATE_INFOPLIST_FILE = YES;
+                                IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+                                LD_RUNPATH_SEARCH_PATHS = (
+                                        "$(inherited)",
+                                        "@executable_path/Frameworks",
+                                        "@loader_path/Frameworks",
+                                );
+                                MACOSX_DEPLOYMENT_TARGET = 14.0;
+                                PRODUCT_BUNDLE_IDENTIFIER = com.scheduleai.tests;
+                                PRODUCT_NAME = "$(TARGET_NAME)";
+                                SWIFT_VERSION = 5.10;
+                                TARGETED_DEVICE_FAMILY = "1,2";
+                                TEST_HOST = "$(BUILT_PRODUCTS_DIR)/ScheduleAI.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/ScheduleAI";
+                        };
+                        name = Debug;
+                };
+                437773A72E8D1ABC0026431B /* Release */ = {
+                        isa = XCBuildConfiguration;
+                        buildSettings = {
+                                ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = YES;
+                                BUNDLE_LOADER = "$(TEST_HOST)";
+                                CLANG_ENABLE_MODULES = YES;
+                                CODE_SIGN_STYLE = Automatic;
+                                GENERATE_INFOPLIST_FILE = YES;
+                                IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+                                LD_RUNPATH_SEARCH_PATHS = (
+                                        "$(inherited)",
+                                        "@executable_path/Frameworks",
+                                        "@loader_path/Frameworks",
+                                );
+                                MACOSX_DEPLOYMENT_TARGET = 14.0;
+                                PRODUCT_BUNDLE_IDENTIFIER = com.scheduleai.tests;
+                                PRODUCT_NAME = "$(TARGET_NAME)";
+                                SWIFT_VERSION = 5.10;
+                                TARGETED_DEVICE_FAMILY = "1,2";
+                                TEST_HOST = "$(BUILT_PRODUCTS_DIR)/ScheduleAI.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/ScheduleAI";
+                        };
+                        name = Release;
+                };
 		4377734C2E8CF1DF0026431B /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
@@ -327,15 +440,24 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
-		4377734B2E8CF1DF0026431B /* Build configuration list for PBXNativeTarget "ScheduleAI" */ = {
-			isa = XCConfigurationList;
-			buildConfigurations = (
-				4377734C2E8CF1DF0026431B /* Debug */,
-				4377734D2E8CF1DF0026431B /* Release */,
-			);
-			defaultConfigurationIsVisible = 0;
-			defaultConfigurationName = Release;
-		};
+                4377734B2E8CF1DF0026431B /* Build configuration list for PBXNativeTarget "ScheduleAI" */ = {
+                        isa = XCConfigurationList;
+                        buildConfigurations = (
+                                4377734C2E8CF1DF0026431B /* Debug */,
+                                4377734D2E8CF1DF0026431B /* Release */,
+                        );
+                        defaultConfigurationIsVisible = 0;
+                        defaultConfigurationName = Release;
+                };
+                437773A52E8D1ABC0026431B /* Build configuration list for PBXNativeTarget "ScheduleAITests" */ = {
+                        isa = XCConfigurationList;
+                        buildConfigurations = (
+                                437773A62E8D1ABC0026431B /* Debug */,
+                                437773A72E8D1ABC0026431B /* Release */,
+                        );
+                        defaultConfigurationIsVisible = 0;
+                        defaultConfigurationName = Release;
+                };
 /* End XCConfigurationList section */
 
 /* Begin XCRemoteSwiftPackageReference section */
