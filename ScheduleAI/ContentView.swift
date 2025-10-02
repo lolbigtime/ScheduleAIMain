@@ -43,8 +43,7 @@ struct ContentView: View {
         .fileImporter(isPresented: $showFileImporter,
                       allowedContentTypes: activeImporter?.contentTypes ?? [.pdf]) { result in
             switch result {
-            case let .success(urls):
-                guard let url = urls.first else { return }
+            case let .success(url):
                 Task { await handleImport(of: url, intent: activeImporter ?? .pdf) }
             case let .failure(error):
                 alertInfo = AlertInfo(title: "Import Failed", message: error.localizedDescription)
