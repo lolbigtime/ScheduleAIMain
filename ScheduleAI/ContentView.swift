@@ -107,20 +107,41 @@ struct ContentView: View {
             VStack(alignment: .leading, spacing: 20) {
                 HStack(spacing: 16) {
                     Button(action: { presentImporter(.pdf) }) {
-                        Label("Import PDF", systemImage: "doc.richtext")
-                            .fontWeight(.semibold)
+                        Label {
+                            Text("Import PDF")
+                                .fontWeight(.semibold)
+                                .lineLimit(1)
+                                .minimumScaleFactor(0.9)
+                        } icon: {
+                            Image(systemName: "doc.richtext")
+                        }
+                        .labelStyle(.titleAndIcon)
                     }
                     .buttonStyle(GlassButtonStyle())
 
                     Button(action: { presentImporter(.textFile) }) {
-                        Label("Import Text", systemImage: "doc.text")
-                            .fontWeight(.semibold)
+                        Label {
+                            Text("Import Text")
+                                .fontWeight(.semibold)
+                                .lineLimit(1)
+                                .minimumScaleFactor(0.9)
+                        } icon: {
+                            Image(systemName: "doc.text")
+                        }
+                        .labelStyle(.titleAndIcon)
                     }
                     .buttonStyle(GlassButtonStyle())
 
                     Button(action: { showTextComposer = true }) {
-                        Label("Paste Snippet", systemImage: "square.and.pencil")
-                            .fontWeight(.semibold)
+                        Label {
+                            Text("Paste Snippet")
+                                .fontWeight(.semibold)
+                                .lineLimit(1)
+                                .minimumScaleFactor(0.9)
+                        } icon: {
+                            Image(systemName: "square.and.pencil")
+                        }
+                        .labelStyle(.titleAndIcon)
                     }
                     .buttonStyle(GlassButtonStyle())
                 }
